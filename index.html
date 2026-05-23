@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Shinobu 15s Talking Avatar</title>
+    <title>Shinobu 5s Interactive Avatar</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -16,6 +16,8 @@
             overflow: hidden;
             position: relative;
         }
+        
+        /* Premium Background Gaps Filler Animation */
         .bg-glow {
             position: absolute;
             width: 150%;
@@ -28,9 +30,11 @@
             animation: bgShift 15s infinite alternate linear;
         }
         @keyframes bgShift { 0% { transform: rotate(0deg) scale(1); } 100% { transform: rotate(360deg) scale(1.1); } }
+        
         .particle-container { position: absolute; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
         .particle { position: absolute; background: radial-gradient(circle, rgba(187, 134, 252, 0.8) 0%, rgba(187, 134, 252, 0) 70%); border-radius: 50%; animation: floatUp 8s infinite linear; }
         @keyframes floatUp { 0% { transform: translateY(105vh) translateX(0) scale(0.5); opacity: 0; } 50% { opacity: 0.7; } 100% { transform: translateY(-10vh) translateX(50px) scale(1.2); opacity: 0; } }
+        
         .mobile-frame {
             position: relative;
             width: 100vw;
@@ -42,19 +46,53 @@
             flex-direction: column;
             justify-content: space-between;
         }
+        
         .avatar-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; padding: 10px; }
-        .avatar-container { width: 100%; border-radius: 20px; overflow: hidden; box-shadow: 0 0 25px rgba(155, 89, 182, 0.3); transition: all 0.3s ease; position: relative; }
-        .avatar-img { width: 100%; height: auto; display: block; object-fit: cover; pointer-events: none; }
-        @keyframes avatarSpeak {
-            0% { transform: scale(1) translateY(0); }
-            25% { transform: scale(1.02) translateY(-3px); }
-            50% { transform: scale(0.99) translateY(1px); }
-            75% { transform: scale(1.03) translateY(-2px); }
-            100% { transform: scale(1) translateY(0); }
+        
+        /* Main Avatar Container */
+        .avatar-container { 
+            width: 100%; 
+            border-radius: 20px; 
+            overflow: hidden; 
+            box-shadow: 0 0 25px rgba(155, 89, 182, 0.3); 
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            position: relative; 
+            transform-origin: center center;
         }
-        @keyframes avatarListen { 0% { box-shadow: 0 0 20px rgba(52, 152, 219, 0.6); } 50% { box-shadow: 0 0 40px rgba(52, 152, 219, 1); } 100% { box-shadow: 0 0 20px rgba(52, 152, 219, 0.6); } }
-        .listening { animation: avatarListen 1.5s infinite ease-in-out; }
-        .speaking { animation: avatarSpeak 0.15s infinite alternate ease-in-out; }
+        
+        .avatar-img { width: 100%; height: auto; display: block; object-fit: cover; pointer-events: none; transition: all 0.3s ease; }
+
+        /* --- ADVANCED EXPRESSION & MOVEMENT KEYFRAMES --- */
+        
+        /* 1. Listening Expression: Thoughtful head tilt, narrow focused eyes (scale-down filter) */
+        @keyframes avatarListeningExpression {
+            0% { transform: scale(1.01) rotate(1deg) translateY(-2px); filter: saturate(1.1) brightness(0.95); }
+            50% { transform: scale(1.02) rotate(-1deg) translateY(-4px); filter: saturate(1.15) brightness(1); }
+            100% { transform: scale(1.01) rotate(1deg) translateY(-2px); filter: saturate(1.1) brightness(0.95); }
+        }
+
+        /* 2. Speaking Expression: Continuous micro lip-sync (Y-axis stretch) and eye blinking movement (X-axis shift) */
+        @keyframes avatarSpeakingLipsAndEyes {
+            0% { transform: scale(1) scaleY(1.04) translateY(-1px); filter: brightness(1.1); }
+            20% { transform: scale(1.03) scaleY(0.97) translateY(2px); filter: brightness(1.05); }
+            40% { transform: scale(0.99) scaleY(1.05) translateY(-3px); filter: brightness(1.15); }
+            60% { transform: scale(1.04) scaleY(0.96) translateY(1px); filter: brightness(1.08); }
+            80% { transform: scale(1.01) scaleY(1.03) translateY(-2px); filter: brightness(1.12); }
+            100% { transform: scale(1) scaleY(1) translateY(0); filter: brightness(1); }
+        }
+
+        /* Classes triggered dynamically via JS */
+        .listening { 
+            animation: avatarListeningExpression 2.5s infinite ease-in-out;
+            box-shadow: 0 0 40px rgba(52, 152, 219, 0.8);
+        }
+        
+        .speaking { 
+            animation: avatarSpeakingLipsAndEyes 0.14s infinite alternate cubic-bezier(0.36, 0.07, 0.19, 0.97);
+            box-shadow: 0 0 45px rgba(232, 67, 147, 0.9);
+        }
+
+        /* UI Control Elements */
         .hud-display { background: rgba(13, 8, 24, 0.9); backdrop-filter: blur(10px); padding: 25px 20px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: calc(25px + env(safe-area-inset-bottom)); }
         .status-pill { display: inline-block; padding: 8px 20px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; background: rgba(255, 255, 255, 0.1); margin-bottom: 12px; }
         .status-pill.ready { color: #a29bfe; border: 1px solid #6c5ce7; }
@@ -62,15 +100,14 @@
         .status-pill.speaking-mode { color: #e84393; border: 1px solid #e84393; }
         .subtitle-box { font-size: 1.1rem; color: #f1f2f6; min-height: 50px; line-height: 1.4; }
         
-        /* 15s Timer Progress Bar */
+        /* 5s Reduced Visual Timer Bar */
         .timer-bar {
             position: absolute;
             top: 0;
             left: 0;
-            height: 4px;
-            background: #3498db;
+            height: 5px;
+            background: #e84393;
             width: 0%;
-            transition: width 15s linear;
             z-index: 10;
         }
     </style>
@@ -81,24 +118,23 @@
     <div class="particle-container" id="particleContainer"></div>
 
     <div class="mobile-frame">
-        <!-- 15 Seconds Time Visualizer -->
+        <!-- 5 Seconds Visual Progress Indicator -->
         <div class="timer-bar" id="timerBar"></div>
         
         <div style="height: 30px;"></div>
         <div class="avatar-wrapper" id="tapZone">
             <div class="avatar-container" id="avatarContainer">
-                <!-- App can use 1387209.jpg locally in the folder -->
-                <img src="1387209.jpg" alt="Shinobu" class="avatar-img" id="animeImage">
+                <img src="1387209.jpg" alt="Shinobu" class="avatar-img" id="animeImage" onerror="this.src='https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=1000&auto=format&fit=crop'">
             </div>
         </div>
         <div class="hud-display">
-            <div class="status-pill ready" id="statusPill">Tap to Talk (Max 15s)</div>
-            <div class="subtitle-box" id="subtitles">Hindi, English, ya Gujarati me boliye...</div>
+            <div class="status-pill ready" id="statusPill">Tap to Talk (Max 5s)</div>
+            <div class="subtitle-box" id="subtitles">Kuch bhi boliye, 5 second me cut ho jayega...</div>
         </div>
     </div>
 
     <script>
-        // Particles Background Loop
+        // Decorative Particle Loop
         const pContainer = document.getElementById('particleContainer');
         for(let i=0; i<15; i++) {
             let p = document.createElement('div');
@@ -109,7 +145,6 @@
             pContainer.appendChild(p);
         }
 
-        // Voice Engine & Timers
         const tapZone = document.getElementById('tapZone');
         const avatarContainer = document.getElementById('avatarContainer');
         const statusPill = document.getElementById('statusPill');
@@ -120,54 +155,54 @@
         const synth = window.speechSynthesis;
         let isWorking = false;
         let maxTimeLimit;
+        let recognitionInstance = null;
 
         if (SpeechRecognition) {
-            const recognition = new SpeechRecognition();
-            recognition.continuous = true; // Kept true so it doesn't cut off mid-sentence before 15s
-            recognition.interimResults = false;
+            recognitionInstance = new SpeechRecognition();
+            recognitionInstance.continuous = false; 
+            recognitionInstance.interimResults = false;
 
             tapZone.addEventListener('click', () => {
                 if (isWorking) return;
                 isWorking = true;
-                synth.cancel();
+                
+                synth.cancel(); // Stop old audio instantly
 
-                recognition.lang = 'hi-IN'; 
+                recognitionInstance.lang = 'hi-IN'; 
+                
+                // Triggers Thoughtful Listening Face Expression Change
                 avatarContainer.className = "avatar-container listening";
                 statusPill.className = "status-pill listening-mode";
                 statusPill.innerText = "Listening...";
-                subtitles.innerText = "Suno, mai 15 seconds tak sun rahi hu...";
+                subtitles.innerText = "Boliyen, mai dhyan se sun rahi hu...";
                 
-                // Start Timer Bar Animation
+                // 5s Faster Visual Progress Bar Animation
                 timerBar.style.transition = 'none';
                 timerBar.style.width = '0%';
                 setTimeout(() => {
-                    timerBar.style.transition = 'width 15s linear';
+                    timerBar.style.transition = 'width 5s linear';
                     timerBar.style.width = '100%';
                 }, 50);
 
-                recognition.start();
-
-                // Hard Stop Recognition after exactly 15 seconds
-                maxTimeLimit = setTimeout(() => {
-                    recognition.stop();
-                }, 15000);
-            });
-
-            recognition.onresult = (event) => {
-                // Clear the 15s timeout since recognition stopped/finished
-                clearTimeout(maxTimeLimit);
-                timerBar.style.transition = 'none';
-                timerBar.style.width = '0%';
-
-                // Gather everything spoken within those 15 seconds
-                let fullTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        fullTranscript += event.results[i][0].transcript;
-                    }
+                try {
+                    recognitionInstance.start();
+                } catch(e) {
+                    recognitionInstance.stop();
+                    setTimeout(() => { recognitionInstance.start(); }, 200);
                 }
 
-                if(fullTranscript.trim() !== "") {
+                // Strict 5 Seconds Time Cutoff Limit
+                maxTimeLimit = setTimeout(() => {
+                    subtitles.innerText = "5s Over! Processing...";
+                    recognitionInstance.stop();
+                }, 5000);
+            });
+
+            recognitionInstance.onresult = (event) => {
+                clearTimeout(maxTimeLimit);
+                const fullTranscript = event.results[0][0].transcript;
+
+                if(fullTranscript && fullTranscript.trim() !== "") {
                     subtitles.innerText = `"${fullTranscript}"`;
                     avatarContainer.className = "avatar-container"; 
                     speakBack(fullTranscript);
@@ -176,21 +211,24 @@
                 }
             };
 
-            recognition.onerror = () => { 
+            recognitionInstance.onerror = () => { 
                 clearTimeout(maxTimeLimit);
                 resetToReady(); 
             };
             
-            recognition.onend = () => {
+            recognitionInstance.onend = () => {
                 clearTimeout(maxTimeLimit);
-                // If it ended naturally without results
-                if (avatarContainer.classList.contains('listening')) {
-                    resetToReady();
+                if (avatarContainer.classList.contains('listening') && !synth.speaking) {
+                    setTimeout(() => { if(isWorking && !synth.speaking) resetToReady(); }, 800);
                 }
             };
+        } else {
+            subtitles.innerText = "Voice Recognition not supported.";
         }
 
         function speakBack(text) {
+            synth.cancel();
+
             const utterance = new SpeechSynthesisUtterance(text);
             const voices = synth.getVoices();
 
@@ -198,7 +236,7 @@
             let isHindi = /[अ-ह]/.test(text) || ["kya", "hai", "kaise", "aap", "ho"].some(w => text.toLowerCase().includes(w));
 
             if (isGujarati) {
-                utterance.voice = voices.find(v => v.lang.includes('gu-IN')) || voices[0];
+                utterance.voice = voices.find(v => v.lang.includes('gu-IN')) || voices.find(v => v.lang.includes('hi-IN')) || voices[0];
                 utterance.lang = 'gu-IN';
             } else if (isHindi) {
                 utterance.voice = voices.find(v => v.lang.includes('hi-IN')) || voices[0];
@@ -208,6 +246,7 @@
                 utterance.lang = 'en-US';
             }
 
+            // Triggers Lips-Working and Eyes-Blinking Active Loop Animation
             utterance.onstart = () => {
                 avatarContainer.className = "avatar-container speaking";
                 statusPill.className = "status-pill speaking-mode";
@@ -217,16 +256,22 @@
             utterance.onend = () => { resetToReady(); };
             utterance.onerror = () => { resetToReady(); };
 
-            synth.speak(utterance);
+            setTimeout(() => {
+                synth.speak(utterance);
+            }, 100);
         }
 
         function resetToReady() {
             avatarContainer.className = "avatar-container";
             statusPill.className = "status-pill ready";
-            statusPill.innerText = "Tap to Talk (Max 15s)";
+            statusPill.innerText = "Tap to Talk (Max 5s)";
             timerBar.style.transition = 'none';
             timerBar.style.width = '0%';
             isWorking = false;
+        }
+
+        if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = () => { synth.getVoices(); };
         }
     </script>
 </body>
